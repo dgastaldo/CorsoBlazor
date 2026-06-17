@@ -1,10 +1,16 @@
 ﻿@using SmartHub.Models
+@inject NavigationManager navigationManager
+
 <div class="card @(Device.IsOn ? "border-primary" : "")">
     <div class="card-body">
         <h5>@Device.Name</h5>
         <button class="btn @(Device.IsOn ? "btn-success" : "btn-outline-secondary")"
                 @onclick="Toggle">
             @(Device.IsOn ? "ON" : "OFF")
+        </button>
+        <button class="btn btn-outline-secondary"
+                @onclick="@(() => navigationManager.NavigateTo($"/editdevice/{Device.Id}"))">
+            Edit Device
         </button>
     </div>
 </div>

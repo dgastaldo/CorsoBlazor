@@ -69,7 +69,6 @@
         // 1. Inizio operazione: mostriamo un indicatore di caricamento
         isSaving = true;
         errorMessage = null;
-
         try
         {
             // 3. Validazione logica extra (esempio: controllo duplicati)
@@ -90,6 +89,7 @@
             // Notifichiamo a tutta l'app che c'è un nuovo dispositivo
             var totalCount = Db.IoTDevices.Count();
             // StateService.UpdateCount(totalCount);
+            editContext = new EditContext(newDevice);
             navigationManager.NavigateTo("/");
         }
         catch (Exception ex)
@@ -107,7 +107,7 @@
     private async Task HandleInternalNavigation(LocationChangingContext context)
     {
         Console.WriteLine($"editContext?.IsModified(): {editContext?.IsModified()}");
-        if (editContext?.IsModified() ?? false)
+        if (editContext?.IsModified() ?? false && !isSaving)
         {
             var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", "Hai modifiche non salvate. Vuoi davvero uscire?");
 

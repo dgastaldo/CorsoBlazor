@@ -1,0 +1,107 @@
+﻿@page "/device/{Id:int}"
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.JSInterop
+@using SmartHub.Models
+@implements IAsyncDisposable
+@inject SmartHubDbContext Db
+@inject IJSRuntime JS
+@inject NavigationManager Nav
+@rendermode InteractiveServer
+
+<PageTitle>Dettaglio - @(device?.Name ?? "Caricamento")</PageTitle>
+
+@if (device == null)
+{
+    <div class="text-center mt-5">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p>Recupero informazioni dal database...</p>
+    </div>
+}
+else
+{
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/" @onclick:preventDefault @onclick='() => Nav.NavigateTo("/")'>Dashboard</a></li>
+            <li class="breadcrumb-item active">@device.Name</li>
+        </ol>
+    </nav>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Informazioni Dispositivo</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Nome:</strong> @device.Name</p>
+                    <p>
+                        <strong>Stato:</strong>
+                        <span class="badge @(device.IsOn? "bg-success" : "bg-danger")">
+                            @(device.IsOn? "Attivo" : "Spento")
+                        </span>
+                    </p>
+                    <p><strong>Valore Corrente:</strong> @device.Value °C</p>
+                    <hr />
+                    <button class="btn btn-outline-primary w-100" @onclick='() => Nav.NavigateTo("/")'>
+                        Torna alla Dashboard
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Colonna Grafico Storico -->
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Storico ultime 24 ore</h5>
+                    <div style="height: 350px;">
+                        <canvas id="deviceDetailChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+    private IoTDevice? device;
+    private IJSObjectReference? _module;
+
+    // FASE 1: Recupero dati dal DB (C#)
+    protected override async Task OnInitializedAsync()
+    {
+        device = await Db.IoTDevices.FirstOrDefaultAsync(d => d.Id == Id);
+
+        if (device == null)
+        {
+            // Se l'ID non esiste, riportiamo l'utente in home (o una 404)
+            Nav.NavigateTo("/");
+        }
+    }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && device != null)
+        {
+            // Simulazione 24 punti storici
+            var labels = Enumerable.Range(0, 24)
+                            .Select(i => DateTime.Now.AddHours(-23 + i).ToString("HH:00"))
+                            .ToArray();
+
+            var random = new Random();
+            var dataPoints = Enumerable.Range(0, 24)
+                                .Select(_ => Math.Round(device.Value + (random.NextDouble() * 2 - 1), 1))
+                                .ToArray();
+
+            // Import modulo dalla RCL
+            _module = await JS.InvokeAsync<IJSObjectReference>("import",
+                "./_content/SmartHub.UI/js/chartModule.js");
+
+            // Render grafico
+            await _module.InvokeVoidAsync("renderLineChart", "deviceDetailChart", labels, dataPoints);
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_module is not null) await _module.DisposeAsync();
+    }
+}

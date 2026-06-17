@@ -1,0 +1,31 @@
+﻿@page "/"
+@using SmartHub.UI.Components;
+@using SmartHub.Models;
+@using SmartHub.UI;
+@inject IDeviceService deviceService;
+@using static Microsoft.AspNetCore.Components.Web.RenderMode
+@rendermode InteractiveAuto
+
+<PageTitle>Home</PageTitle>
+
+<SalutoComponent/>
+
+Welcome to your new IoT Devices Dashboard.
+
+<div class="row">
+    @foreach (var d in devices) {
+        <div class="col-md-4">
+            <IoTDeviceCardComponent Device="d"
+                                    OnToggle="async () => await Save(d)" @rendermode="InteractiveAuto"/>
+        </div>
+    }
+</div>
+
+@code {
+    List<IoTDevice> devices = new();
+    protected override async Task OnInitializedAsync() => devices = await deviceService.GetAllDevicesAsync();
+    async Task Save(IoTDevice d) {
+        Console.WriteLine("Entro in save del toggle");
+        await deviceService.ToggleActivationAsync(d);
+    }
+}

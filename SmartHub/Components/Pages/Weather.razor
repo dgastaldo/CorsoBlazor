@@ -37,7 +37,7 @@ else
 }
 
 @code {
-    private WeatherForecast[]? forecasts;// = [new() { Date = DateOnly.FromDateTime(DateTime.Now) , TemperatureC = 30, Summary = "Scorching"}];
+    private WeatherForecast[]? forecasts;
 
     protected override async Task OnInitializedAsync()
     {
@@ -53,8 +53,6 @@ else
             Summary = summaries[Random.Shared.Next(summaries.Length)]
         }).ToArray();
     }
-
-
 
     private class WeatherForecast
     {

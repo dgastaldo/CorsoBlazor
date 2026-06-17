@@ -9,11 +9,18 @@
 
 <button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
 
+@foreach (var i in listNumbers)
+{
+    <p>Counter value: @i</p>
+}
+
 @code {
     private int currentCount = 1;
+    private List<int> listNumbers = new List<int>();
 
     private void IncrementCount()
     {
         currentCount++;
+        listNumbers.Add(currentCount);
     }
 }

@@ -1,0 +1,17 @@
+[
+  {
+    "Name": "Complete App",
+    "Projects": [
+      {
+        "Path": "SmartHub\\SmartHub.csproj",
+        "Action": "Start",
+        "DebugTarget": "https"
+      },
+      {
+        "Path": "SmartHub.Client\\SmartHub.Client.csproj",
+        "Action": "Start",
+        "DebugTarget": "SmartHub.Client"
+      }
+    ]
+  }
+]
