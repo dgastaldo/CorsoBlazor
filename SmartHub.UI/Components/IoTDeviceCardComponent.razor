@@ -1,0 +1,16 @@
+﻿@using SmartHub.Models
+<div class="card @(Device.IsOn ? "border-primary" : "")">
+    <div class="card-body">
+        <h5>@Device.Name</h5>
+        <button class="btn @(Device.IsOn ? "btn-success" : "btn-outline-secondary")"
+                @onclick="Toggle">
+            @(Device.IsOn ? "ON" : "OFF")
+        </button>
+    </div>
+</div>
+
+@code {
+    [Parameter] public IoTDevice Device { get; set; } = default!;
+    [Parameter] public EventCallback OnToggle { get; set; }
+    private async Task Toggle() => await OnToggle.InvokeAsync();
+}

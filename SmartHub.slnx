@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="SmartHub.Client/SmartHub.Client.csproj" />
+  <Project Path="SmartHub.Models/SmartHub.Models.csproj" />
+  <Project Path="SmartHub.UI/SmartHub.UI.csproj" />
+  <Project Path="SmartHub/SmartHub.csproj" />
+</Solution>

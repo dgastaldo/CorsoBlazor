@@ -1,0 +1,121 @@
+﻿@page "/adddevice"
+@using Microsoft.AspNetCore.Components.Sections
+@using SmartHub.Models
+@inject SmartHubDbContext Db
+@inject NavigationManager navigationManager
+@inject IJSRuntime JSRuntime
+@rendermode InteractiveServer
+
+<SectionContent SectionName= "breadcrumbs">
+    <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+        Home
+    </NavLink>
+</SectionContent>
+
+<h3>Nuovo Dispositivo IoT</h3>
+
+<EditForm EditContext="editContext" OnValidSubmit="HandleSave">
+    <DataAnnotationsValidator />
+
+    @if (errorMessage != null)
+    {
+        <div class="alert alert-danger">@errorMessage</div>
+    }
+
+    <div class="mb-3">
+        <label>Nome Dispositivo</label>
+        <InputText @bind-Value="newDevice.Name" class="form-control" />
+        <ValidationMessage For="() => newDevice.Name" />
+    </div>
+
+    <!-- Sezione Smart vista prima -->
+    <div class="mb-3">
+        <label>Descrizione</label>
+        <InputTextArea @bind-Value="newDevice.Description" class="form-control" />
+        <ValidationMessage For="() => newDevice.Description" />
+    </div>
+
+    <button type="button" class="btn btn-secondary" onclick="@(() => navigationManager.NavigateTo("/"))">
+        <span>Back</span>
+    </button>
+    <button type="submit" class="btn btn-primary" disabled="@isSaving">
+        @if (isSaving)
+        {
+            <span class="spinner-border spinner-border-sm"></span> <span>Salvataggio...</span>
+        }
+        else
+        {
+            <span>Salva Dispositivo</span>
+        }
+    </button>
+
+</EditForm>
+<NavigationLock ConfirmExternalNavigation="editContext?.IsModified() ?? false"
+                OnBeforeInternalNavigation="HandleInternalNavigation" />
+
+@code {
+
+    private IoTDevice newDevice = new();
+    private bool isSaving = false;
+    private string? errorMessage;
+    private EditContext? editContext;
+
+    protected override void OnInitialized()
+    {
+        editContext = new EditContext(newDevice);
+    }
+
+    private async Task HandleSave()
+    {
+        // 1. Inizio operazione: mostriamo un indicatore di caricamento
+        isSaving = true;
+        errorMessage = null;
+
+        try
+        {
+            // 3. Validazione logica extra (esempio: controllo duplicati)
+            bool exists = Db.IoTDevices.Any(d => d.Name != null && newDevice.Name != null && d.Name.ToLower() == newDevice.Name.ToLower());
+            if (exists)
+            {
+                errorMessage = "Esiste già un dispositivo con questo nome.";
+                isSaving = false;
+                return;
+            }
+            newDevice.IsOn = false;
+            newDevice.Value = 0;
+            // 4. Persistenza su SQLite
+            Db.IoTDevices.Add(newDevice);
+            await Db.SaveChangesAsync();
+
+            // 5. Aggiornamento dello Stato Globale (Pattern visto nel Giorno 2)
+            // Notifichiamo a tutta l'app che c'è un nuovo dispositivo
+            var totalCount = Db.IoTDevices.Count();
+            // StateService.UpdateCount(totalCount);
+            navigationManager.NavigateTo("/");
+        }
+        catch (Exception ex)
+        {
+            // 7. Gestione degli errori (Log e feedback visivo)
+            errorMessage = "Si è verificato un errore imprevisto durante il salvataggio.";
+            Console.WriteLine($"Errore: {ex.Message}");
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private async Task HandleInternalNavigation(LocationChangingContext context)
+    {
+        Console.WriteLine($"editContext?.IsModified(): {editContext?.IsModified()}");
+        if (editContext?.IsModified() ?? false)
+        {
+            var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", "Hai modifiche non salvate. Vuoi davvero uscire?");
+
+            if (!confirmed)
+            {
+                context.PreventNavigation(); // Blocca la navigazione
+            }
+        }
+    }
+}
