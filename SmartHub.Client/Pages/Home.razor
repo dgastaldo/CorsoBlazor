@@ -16,7 +16,7 @@ Welcome to your new IoT Devices Dashboard.
     @foreach (var d in devices) {
         <div class="col-md-4">
             <IoTDeviceCardComponent Device="d"
-                                    OnToggle="async () => await Save(d)" @rendermode="InteractiveAuto"/>
+                                    OnToggle="@(() => Save(d))"/>
         </div>
     }
 </div>
@@ -27,5 +27,6 @@ Welcome to your new IoT Devices Dashboard.
     async Task Save(IoTDevice d) {
         Console.WriteLine("Entro in save del toggle");
         await deviceService.ToggleActivationAsync(d);
+        devices = await deviceService.GetAllDevicesAsync();
     }
 }

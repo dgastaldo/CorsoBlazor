@@ -1,0 +1,6 @@
+utenti di test
+admin@test.com
+user@test.com
+user2@test.com
+Password valida per tutti
+ABCDefgh1234!
